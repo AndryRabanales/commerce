@@ -3,25 +3,32 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import CartIcon from './CartIcon';
 import SearchBar from './SearchBar';
-
+import { FiSearch } from 'react-icons/fi';
 
 export default function Navbar() {
   const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
-  // Detectar scroll para cambiar estilo
+  // Detectar scroll para aplicar estilo blur
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Desactivar scroll al abrir menú móvil
+  // Bloquear scroll global cuando el menú o buscador estén abiertos
   useEffect(() => {
-    document.body.style.overflow = menuOpen ? 'hidden' : '';
-    return () => (document.body.style.overflow = '');
-  }, [menuOpen]);
+    const body = document.body;
+    if (menuOpen || searchOpen) {
+      body.classList.add('overflow-hidden');
+    } else {
+      body.classList.remove('overflow-hidden');
+    }
+
+    return () => body.classList.remove('overflow-hidden');
+  }, [menuOpen, searchOpen]);
 
   return (
     <motion.header
@@ -32,8 +39,9 @@ export default function Navbar() {
         scrolled ? 'bg-white/80 shadow-md backdrop-blur' : 'bg-white'
       }`}
     >
-      {/* NAVBAR PRINCIPAL */}
+      {/* NAVBAR DESKTOP & MOBILE */}
       <nav className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 flex justify-between items-center h-20">
+        {/* LOGO */}
         <Link
           to="/"
           className="text-3xl font-playfair font-extrabold text-gray-900 tracking-wide transform hover:scale-105 transition duration-300"
@@ -41,28 +49,32 @@ export default function Navbar() {
           MiTienda
         </Link>
 
-        {/* DESKTOP NAV */}
-        {/* DESKTOP NAV */}
-<div className="gap-6 text-base font-medium hidden md:flex items-center flex-1">
-  <div className="flex items-center gap-6">
-    <AnimatedNavLink to="/" label="Inicio" active={location.pathname === '/'} />
-    <AnimatedNavLink to="/products" label="Productos" active={location.pathname === '/products'} />
-  </div>
+        {/* NAV DESKTOP */}
+        <div className="gap-6 text-base font-medium hidden md:flex items-center flex-1">
+          <div className="flex items-center gap-6">
+            <AnimatedNavLink to="/" label="Inicio" active={location.pathname === '/'} />
+            <AnimatedNavLink to="/products" label="Productos" active={location.pathname === '/products'} />
+          </div>
 
-  <div className="flex-1 px-4">
-    <SearchBar />
-  </div>
+          <div className="flex-1 px-4">
+            <SearchBar />
+          </div>
 
-  <CartIcon count={3} />
-</div>
+          <CartIcon count={3} />
+        </div>
 
-
-
-        {/* BOTÓN BURGER MOBILE */}
-        <div className="md:hidden">
+        {/* ICONOS MOBILE */}
+        <div className="md:hidden flex items-center gap-4">
           <button
-            className="text-gray-700 focus:outline-none"
-            onClick={() => setMenuOpen(!menuOpen)}
+            className="text-gray-700"
+            onClick={() => setSearchOpen(true)}
+            aria-label="Buscar"
+          >
+            <FiSearch className="w-6 h-6" />
+          </button>
+          <button
+            className="text-gray-700"
+            onClick={() => setMenuOpen(true)}
             aria-label="Abrir menú"
           >
             <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -72,11 +84,10 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* MENÚ LATERAL ANIMADO PARA MÓVIL */}
+      {/* ASIDE MOBILE MENU */}
       <AnimatePresence>
         {menuOpen && (
           <>
-            {/* FONDO OSCURO */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 0.5 }}
@@ -85,16 +96,14 @@ export default function Navbar() {
               className="fixed inset-0 bg-black z-40"
               onClick={() => setMenuOpen(false)}
             />
+           <motion.aside
+  initial={{ x: '100%' }}
+  animate={{ x: 0 }}
+  exit={{ x: '100%' }}
+  transition={{ duration: 0.4, ease: 'easeOut' }}
+  className="fixed top-0 right-0 w-[80%] max-w-xs h-screen bg-white z-50 shadow-xl flex flex-col justify-between overflow-y-auto"
+>
 
-            {/* MENÚ LATERAL */}
-            <motion.aside
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ duration: 0.4, ease: 'easeOut' }}
-              className="fixed right-0 top-0 h-full w-[80%] max-w-xs bg-white z-50 shadow-xl flex flex-col justify-between overflow-y-auto"
-            >
-              {/* HEADER MENÚ */}
               <div className="flex items-center justify-between px-5 py-4 border-b">
                 <h2 className="text-lg font-semibold">Menú</h2>
                 <button
@@ -105,7 +114,6 @@ export default function Navbar() {
                 </button>
               </div>
 
-              {/* ENLACES DEL MENÚ */}
               <nav className="flex flex-col gap-5 px-6 py-6 text-gray-800 font-medium">
                 <Link to="/" onClick={() => setMenuOpen(false)} className="hover:text-black flex justify-between">
                   Inicio <span>›</span>
@@ -113,15 +121,18 @@ export default function Navbar() {
                 <Link to="/products" onClick={() => setMenuOpen(false)} className="hover:text-black flex justify-between">
                   Productos <span>›</span>
                 </Link>
-                <button className="flex justify-between hover:text-black">
-                  Categorías <span>›</span>
-                </button>
-                <button className="flex justify-between hover:text-black">
-                  Ofertas <span>›</span>
-                </button>
+                <Link to="/categories" onClick={() => setMenuOpen(false)} className="hover:text-black flex justify-between">
+  Categorías <span>›</span>
+</Link>
+<Link to="/offers" onClick={() => setMenuOpen(false)} className="hover:text-black flex justify-between">
+  Ofertas <span>›</span>
+</Link>
+<Link to="/newsletter" onClick={() => setMenuOpen(false)} className="hover:text-black flex justify-between">
+  Suscríbete <span>›</span>
+</Link>
+
               </nav>
 
-              {/* FOOTER DEL MENÚ */}
               <div className="px-6 pb-6 space-y-4">
                 <button className="w-full bg-black text-white py-2 rounded-full font-semibold hover:bg-gray-800 transition">
                   Unirte
@@ -132,6 +143,48 @@ export default function Navbar() {
                 <div className="text-sm text-gray-500 text-center">
                   ¿Necesitas ayuda? <span className="underline cursor-pointer">Contáctanos</span>
                 </div>
+              </div>
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* ASIDE BUSCADOR MÓVIL */}
+      <AnimatePresence>
+        {searchOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.5 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="fixed inset-0 bg-black z-40"
+              onClick={() => setSearchOpen(false)}
+            />
+            <motion.aside
+              initial={{ y: '-100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '-100%' }}
+              transition={{ duration: 0.3 }}
+              className="fixed top-0 left-0 w-full h-full bg-white z-50 p-6 overflow-y-auto"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <input
+                  type="text"
+                  placeholder="Buscar productos"
+                  className="w-full px-4 py-2 border rounded-full bg-gray-100"
+                />
+                <button className="ml-4 text-gray-600 font-medium" onClick={() => setSearchOpen(false)}>
+                  Cancelar
+                </button>
+              </div>
+              <h4 className="text-gray-500 text-sm mb-3">Términos populares</h4>
+              <div className="flex flex-wrap gap-2">
+                {['Jordan', 'Air Max', 'Ofertas', 'AliExpress', 'Moda', 'Gadgets'].map((term) => (
+                  <span key={term} className="bg-gray-100 px-3 py-1 rounded-full text-sm text-gray-700">
+                    {term}
+                  </span>
+                ))}
               </div>
             </motion.aside>
           </>

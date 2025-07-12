@@ -1,20 +1,24 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Navbar from './components/Navbar'; // Asegúrate de importar bien
+import { Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import Products from './pages/Products';
-import Navbar from './components/Navbar';
-import Footer from './components/Footer';
+import Categories from './pages/Categories';
+import Offers from './pages/Offers';
+import NewsletterBanner from './pages/NewsletterBanner';
 
-export default function App() {
+function App() {
   return (
-    <Router>
-      <Navbar />
-      <main className="pt-20 min-h-screen">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/products" element={<Products />} />
-        </Routes>
-      </main>
-      <Footer />
-    </Router>
+    <>
+      <Navbar /> {/* <-- Aquí se muestra siempre la navbar */}
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/products" element={<Products />} />
+        <Route path="/categories" element={<Categories />} />
+        <Route path="/offers" element={<Offers />} />
+        <Route path="/newsletter" element={<NewsletterBanner />} />
+      </Routes>
+    </>
   );
 }
+
+export default App;
